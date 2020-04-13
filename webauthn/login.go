@@ -3,7 +3,6 @@ package webauthn
 import (
 	"bytes"
 	"encoding/base64"
-	"net/http"
 
 	"github.com/duo-labs/webauthn/protocol"
 )
@@ -89,7 +88,7 @@ func WithAssertionExtensions(extensions protocol.AuthenticationExtensions) Login
 }
 
 // Take the response from the client and validate it against the user credentials and stored session data
-func (webauthn *WebAuthn) FinishLogin(user User, session SessionData, response *http.Request) (*Credential, error) {
+func (webauthn *WebAuthn) FinishLogin(user User, session SessionData, response *protocol.Request) (*Credential, error) {
 	parsedResponse, err := protocol.ParseCredentialRequestResponse(response)
 	if err != nil {
 		return nil, err

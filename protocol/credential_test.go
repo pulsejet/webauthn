@@ -1,10 +1,11 @@
+// +build test
+
 package protocol
 
 import (
 	"bytes"
 	"encoding/base64"
 	"io/ioutil"
-	"net/http"
 	"reflect"
 	"testing"
 
@@ -13,9 +14,9 @@ import (
 
 func TestParseCredentialCreationResponse(t *testing.T) {
 	reqBody := ioutil.NopCloser(bytes.NewReader([]byte(testCredentialRequestBody)))
-	httpReq := &http.Request{Body: reqBody}
+	httpReq := &Request{Body: reqBody}
 	type args struct {
-		response *http.Request
+		response *Request
 	}
 
 	byteID, _ := base64.RawURLEncoding.DecodeString("6xrtBhJQW6QU4tOaB4rrHaS2Ks0yDDL_q8jDC16DEjZ-VLVf4kCRkvl2xp2D71sTPYns-exsHQHTy3G-zJRK8g")

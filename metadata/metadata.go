@@ -7,10 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"net/http"
 
-	"github.com/cloudflare/cfssl/revoke"
 	"github.com/mitchellh/mapstructure"
 	uuid "github.com/satori/go.uuid"
 
@@ -390,7 +387,7 @@ type MDSGetEndpointsResponse struct {
 // ProcessMDSTOC processes a FIDO metadata table of contents object per §3.1.8, steps 1 through 5
 // FIDO Authenticator Metadata Service
 // https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-service-v2.0-rd-20180702.html#metadata-toc-object-processing-rules
-func ProcessMDSTOC(url string, suffix string, c http.Client) (MetadataTOCPayload, string, error) {
+func ProcessMDSTOC(url string, suffix string, c interface{}) (MetadataTOCPayload, string, error) {
 	var tocAlg string
 	var payload MetadataTOCPayload
 	// 1. The FIDO Server MUST be able to download the latest metadata TOC object from the well-known URL, when appropriate.
@@ -402,7 +399,7 @@ func ProcessMDSTOC(url string, suffix string, c http.Client) (MetadataTOCPayload
 	return unmarshalMDSTOC(body, c)
 }
 
-func unmarshalMDSTOC(body []byte, c http.Client) (MetadataTOCPayload, string, error) {
+func unmarshalMDSTOC(body []byte, c interface{}) (MetadataTOCPayload, string, error) {
 	var tocAlg string
 	var payload MetadataTOCPayload
 	token, err := jwt.Parse(string(body), func(token *jwt.Token) (interface{}, error) {
@@ -455,7 +452,7 @@ func unmarshalMDSTOC(body []byte, c http.Client) (MetadataTOCPayload, string, er
 	return payload, tocAlg, err
 }
 
-func getMetdataTOCSigningTrustAnchor(c http.Client) ([]byte, error) {
+func getMetdataTOCSigningTrustAnchor(c interface{}) ([]byte, error) {
 	rooturl := ""
 	if Conformance {
 		rooturl = "https://fidoalliance.co.nz/mds/pki/MDSROOT.crt"
@@ -466,7 +463,7 @@ func getMetdataTOCSigningTrustAnchor(c http.Client) ([]byte, error) {
 	return downloadBytes(rooturl, c)
 }
 
-func validateChain(chain []interface{}, c http.Client) (bool, error) {
+func validateChain(chain []interface{}, c interface{}) (bool, error) {
 	root, err := getMetdataTOCSigningTrustAnchor(c)
 	if err != nil {
 		return false, err
@@ -489,12 +486,6 @@ func validateChain(chain []interface{}, c http.Client) (bool, error) {
 		return false, err
 	}
 
-	if revoked, ok := revoke.VerifyCertificate(intcert); !ok {
-		return false, errCRLUnavailable
-	} else if revoked {
-		return false, errIntermediateCertRevoked
-	}
-
 	ints := x509.NewCertPool()
 	ints.AddCert(intcert)
 
@@ -506,11 +497,6 @@ func validateChain(chain []interface{}, c http.Client) (bool, error) {
 	leafcert, err := x509.ParseCertificate(l[:n])
 	if err != nil {
 		return false, err
-	}
-	if revoked, ok := revoke.VerifyCertificate(leafcert); !ok {
-		return false, errCRLUnavailable
-	} else if revoked {
-		return false, errLeafCertRevoked
 	}
 
 	opts := x509.VerifyOptions{
@@ -524,7 +510,7 @@ func validateChain(chain []interface{}, c http.Client) (bool, error) {
 // GetMetadataStatement iterates through a list of payload entries within a FIDO metadata table of contents object per §3.1.8, step 6
 // FIDO Authenticator Metadata Service
 // https://fidoalliance.org/specs/fido-v2.0-rd-20180702/fido-metadata-service-v2.0-rd-20180702.html#metadata-toc-object-processing-rules
-func GetMetadataStatement(entry MetadataTOCPayloadEntry, suffix string, alg string, c http.Client) (MetadataStatement, error) {
+func GetMetadataStatement(entry MetadataTOCPayloadEntry, suffix string, alg string, c interface{}) (MetadataStatement, error) {
 	var statement MetadataStatement
 	// 1. Ignore the entry if the AAID, AAGUID or attestationCertificateKeyIdentifiers is not relevant to the relying party (e.g. not acceptable by any policy)
 	// Caller is responsible for determining if entry is relevant.
@@ -574,14 +560,18 @@ func unmarshalMetadataStatement(body []byte, hash string) (MetadataStatement, er
 	return statement, err
 }
 
-func downloadBytes(url string, c http.Client) ([]byte, error) {
-	res, err := c.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-	return body, err
+func downloadBytes(url string, c interface{}) ([]byte, error) {
+	return nil, errors.New("Requests disabled")
+	/*
+		cli := c.(http.Client)
+		res, err := cli.Get(url)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+		body, _ := ioutil.ReadAll(res.Body)
+		return body, err
+	*/
 }
 
 type MetadataError struct {

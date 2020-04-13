@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"net/http"
 )
 
 // The basic credential type that is inherited by WebAuthn's
@@ -53,7 +52,7 @@ type ParsedCredentialCreationData struct {
 	Raw      CredentialCreationResponse
 }
 
-func ParseCredentialCreationResponse(response *http.Request) (*ParsedCredentialCreationData, error) {
+func ParseCredentialCreationResponse(response *Request) (*ParsedCredentialCreationData, error) {
 	if response == nil || response.Body == nil {
 		return nil, ErrBadRequest.WithDetails("No response given")
 	}

@@ -3,7 +3,6 @@ package webauthn
 import (
 	"bytes"
 	"encoding/base64"
-	"net/http"
 
 	"github.com/duo-labs/webauthn/protocol"
 	"github.com/duo-labs/webauthn/protocol/webauthncose"
@@ -104,7 +103,7 @@ func WithExtensions(extension protocol.AuthenticationExtensions) RegistrationOpt
 
 // Take the response from the authenticator and client and verify the credential against the user's credentials and
 // session data.
-func (webauthn *WebAuthn) FinishRegistration(user User, session SessionData, response *http.Request) (*Credential, error) {
+func (webauthn *WebAuthn) FinishRegistration(user User, session SessionData, response *protocol.Request) (*Credential, error) {
 	parsedResponse, err := protocol.ParseCredentialCreationResponse(response)
 	if err != nil {
 		return nil, err
