@@ -1,7 +1,6 @@
 package webauthncose
 
 import (
-	"bytes"
 	"crypto/rand"
 	"testing"
 
